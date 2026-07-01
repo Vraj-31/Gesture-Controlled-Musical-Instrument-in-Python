@@ -1,220 +1,421 @@
-# Air Guitar — Phase 1 + Phase 2
+# 🎸 Air Instrument
 
-Gesture-controlled virtual instrument project.
-- **Phase 1**: real-time webcam hand tracking with reliable left/right hand labeling.
-- **Phase 2**: a playable two-handed instrument on top of that — left hand
-  picks a chord, right hand strums it, and a drum zone triggers a kick —
-  all with real, audible, overlapping sound.
+A gesture-controlled virtual musical instrument that uses your webcam to track hand movements in real time. Play guitar, drums, and string instruments in the air without any physical hardware, powered by a custom audio engine that supports seamless, overlapping sound playback.
 
-## What this does
+---
 
-Opens your webcam, detects up to 2 hands in real time, draws the hand
-skeleton on screen, and labels each hand "Left" or "Right" with a confidence
-score. Also shows FPS and live wrist coordinates — the raw signal that
-Phase 2 (strum detection) tracks over time.
+# Overview
 
-## What Phase 2 adds
+Air Instrument transforms your hands into musical controllers using computer vision and real-time gesture recognition. The application detects up to **two hands simultaneously** through your webcam and converts different gestures into musical performances across multiple instrument modes.
 
-A genuinely playable instrument, end to end:
+Instead of relying on traditional input devices, the system interprets:
 
-- **Left hand = chord picker.** Show 0–4 fingers to select one of 5 open
-  chords (Em, G, C, D, Am).
-- **Right hand = strummer.** Move your right hand quickly up or down to
-  "strum" — this triggers the currently-selected chord, with a slightly
-  different sound for down-strums vs up-strums (real strums sweep the
-  strings in a direction, and this mimics that).
-- **Drum zone.** Move your right hand into the red box (bottom-right of the
-  frame) to trigger a kick drum, independent of strumming.
-- **Real overlapping audio.** A chord and a drum hit can sound at the same
-  time without cutting each other off — this needed a proper small audio
-  mixing engine (see `audio_engine.py`), not just simple "play a sound" calls.
-- **No external audio files needed.** All chords and drum sounds are
-  synthesized procedurally in Python (`sound_synth.py`) so Phase 2 runs
-  immediately — you can swap in real recorded samples later without
-  changing any other file.
+- Finger counting
+- Pinching gestures
+- Hand movement velocity
+- Spatial pointing
 
-## Requirements
+to provide an intuitive and interactive virtual music experience.
 
-- Python 3.9–3.12
-- A webcam
-- Speakers/headphones (for Phase 2)
-- ~10MB free disk space (for the hand-tracking model file)
-- **Linux only**: the native PortAudio library, since pip's `sounddevice`
-  package doesn't include it on Linux (it usually does on Windows/Mac).
-  `setup.py` checks for this and tells you the exact fix command if it's
-  missing — e.g. `sudo apt-get install libportaudio2` on Ubuntu/Debian.
+---
 
-## Setup (one-time)
+# Features
+
+## 🎼 Multiple Instrument Modes
+
+Switch instantly between three different instruments using your keyboard.
+
+| Key | Mode |
+|------|------|
+| **1** | Guitar |
+| **2** | Drums |
+| **3** | Strings |
+
+Only the active instrument's gesture logic and visual overlays are processed, keeping the interface clean and improving performance.
+
+---
+
+## 🎸 Guitar Mode
+
+Play guitar entirely in the air.
+
+### Left Hand
+
+- Hold your palm toward the camera.
+- Raise **0–4 fingers** to select different chords.
+
+### Right Hand
+
+- Join your **thumb and index finger** to create a pick gesture.
+- Move your hand **down** and **up** to strum.
+- Open your fingers to disengage the pick.
+
+This greatly reduces accidental strumming while moving your hand.
+
+---
+
+## 🥁 Drums Mode
+
+Play a virtual drum kit using hand movement.
+
+Move either hand into predefined screen regions to trigger different drum sounds:
+
+- Kick
+- Snare
+- Hi-Hat
+- Crash
+- Ride
+- High Tom
+- Mid Tom
+- Floor Tom
+
+Each zone detects quick strikes for a natural drumming experience.
+
+---
+
+## 🎻 Strings Mode
+
+Play sustained orchestral string chords.
+
+### Left Hand
+
+Point your index finger at the **Root Note** column.
+
+Example:
+
+- C
+- D
+- E
+- F
+- G
+- A
+- B
+
+### Right Hand
+
+Point your index finger at the **Chord Variation** column.
+
+Examples:
+
+- Major
+- Minor
+- Sus2
+- Sus4
+- Seventh
+
+Holding both selections generates a sustained chord.
+
+Changing either hand causes the current chord to smoothly crossfade into the newly selected chord.
+
+---
+
+## 🎵 Advanced Audio Engine
+
+Unlike traditional playback methods, Air Instrument includes a custom real-time audio engine built with **sounddevice**.
+
+Features include:
+
+- Multiple overlapping sounds
+- Persistent audio stream
+- Smooth fade-outs
+- Audio grouping
+- Sustained notes
+- Crossfading between chords
+- Low-latency playback
+
+---
+
+# Requirements
+
+- Python **3.9 – 3.12**
+- Webcam
+- Speakers or headphones
+- Approximately **10 MB** free disk space (MediaPipe model)
+
+### Linux Users
+
+Install the native PortAudio library before running the project:
 
 ```bash
-cd src
+sudo apt-get install libportaudio2
+```
+
+Windows and macOS generally include the required PortAudio binaries through the `sounddevice` package.
+
+---
+
+# Installation
+
+## 1. Install Python Dependencies
+
+```bash
 pip install mediapipe opencv-python numpy scipy sounddevice
-python setup.py
 ```
 
-`setup.py` does two things:
-1. Downloads `hand_landmarker.task` (the ML model file) into `src/`.
-2. Checks that `sounddevice` can actually talk to your speakers (PortAudio),
-   and tells you exactly how to fix it if not — this is the #1 thing that
-   silently breaks on a fresh Linux install.
+---
 
-If your network blocks the model download, the script prints a direct URL
-you can open in a browser instead — just save the file as
-`hand_landmarker.task` inside `src/`.
+## 2. Download the MediaPipe Hand Tracking Model
 
-## Run it
+Navigate to the `src/` directory and run:
 
-**Phase 1** (hand tracking only, no sound):
 ```bash
-python main.py
+curl -o hand_landmarker.task -L https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task
 ```
 
-**Phase 2** (full instrument — chords, strumming, drums, real audio):
+---
+
+## 3. Add Drum Samples
+
+Place the required `.wav` drum samples inside:
+
+```text
+sound_previews/
+```
+
+Example:
+
+```text
+sound_previews/
+├── kick.wav
+├── snare.wav
+├── hihat.wav
+├── crash.wav
+├── ride.wav
+├── tom1.wav
+├── tom2.wav
+└── tom3.wav
+```
+
+This folder should be located **one directory above** the main Python script.
+
+---
+
+# Running the Project
+
+Execute:
+
 ```bash
-python main_phase2.py
+python main_phase3.py
 ```
 
-A window opens showing your webcam feed, mirrored (like a selfie cam), with
-hand skeletons overlaid. Press **q** to quit either one.
+A webcam window will open with:
 
-### How to play Phase 2
+- mirrored camera feed
+- detected hand landmarks
+- gesture overlays
+- instrument interface
 
-1. Hold up your **left hand**, palm toward the camera. The number of
-   extended fingers (0–4) picks the chord — watch the on-screen label.
-2. Hold up your **right hand** and move it quickly **down**, then quickly
-   **up**, like an actual strum. Each fast motion plays the currently
-   selected chord.
-3. Move your **right hand** into the **red box** in the bottom-right corner
-   to trigger a kick drum.
-4. Try changing chords with your left hand while continuing to strum with
-   your right — that's the two-handed "instrument" feel this phase is
-   building toward.
+---
 
-## Project structure
+# Keyboard Controls
 
-```
+| Key | Action |
+|------|--------|
+| **1** | Guitar Mode |
+| **2** | Drums Mode |
+| **3** | Strings Mode |
+| **Q** | Quit Application |
+
+---
+
+# How to Play
+
+## 🎸 Guitar Mode
+
+1. Raise your **left hand**.
+2. Hold up **0–4 fingers** to choose a chord.
+3. Pinch your **right thumb** and **index finger**.
+4. The on-screen indicator changes to **JOINED**.
+5. Move your hand down and then up to strum.
+6. Release the pinch to stop playing.
+
+---
+
+## 🥁 Drums Mode
+
+1. Watch the yellow drum zones.
+2. Move either hand quickly into a zone.
+3. Each zone triggers a different drum sound.
+
+---
+
+## 🎻 Strings Mode
+
+1. Point your **left index finger** at a root note.
+2. Point your **right index finger** at a chord variation.
+3. Hold both selections.
+4. Move between zones to smoothly transition between sustained chords.
+
+---
+
+# Project Structure
+
+```text
 src/
-  hand_tracker.py      # Core MediaPipe wrapper — detection only, no gesture logic
-  fps_counter.py        # Performance monitoring utility
-  main.py                # Phase 1 entry point: webcam loop + debug overlay
-  setup.py               # One-time model downloader + audio backend check
-
-  strum_detector.py      # Phase 2: velocity-based strum gesture detection (pure logic)
-  chord_selector.py      # Phase 2: left-hand finger count -> chord name (pure logic)
-  sound_synth.py         # Phase 2: procedural synthesis of chords + drum sounds
-  audio_engine.py        # Phase 2: real-time mixing engine for overlapping playback
-  main_phase2.py          # Phase 2 entry point: wires everything together
-
-  hand_landmarker.task   # (created by setup.py, ~10MB, not committed to git)
+│
+├── hand_tracker.py        # MediaPipe wrapper and gesture detection
+├── fps_counter.py         # FPS monitoring utility
+│
+├── main_phase3.py         # Main application
+├── audio_engine.py        # Real-time audio mixer
+├── sound_synth.py         # Procedural audio synthesis
+│
+├── strum_detector.py      # Velocity-based guitar strumming
+├── chord_selector.py      # Finger count → chord mapping
+├── drum_detector.py       # Drum zone detection
+├── strings_selector.py    # Strings note selection
+│
+└── hand_landmarker.task   # MediaPipe model
 ```
 
-Every Phase 2 logic module (`strum_detector.py`, `chord_selector.py`,
-`sound_synth.py`, `audio_engine.py`) has a built-in self-test you can run
-directly, with zero hardware required:
+---
 
-```bash
-python strum_detector.py    # tests strum detection against synthetic motion
-python chord_selector.py    # tests finger counting against synthetic landmarks
-python sound_synth.py       # verifies every synthesized waveform is valid audio
-python audio_engine.py      # verifies the mixing logic handles overlapping sounds
+# Technical Design
+
+## Pinch-to-Pick Gesture
+
+The guitar only activates when the thumb and index finger are pinched together.
+
+This explicit "pick" gesture prevents accidental strumming while moving your hand around.
+
+---
+
+## Spatial Selection for Strings
+
+Finger counting is unsuitable for sustained instruments because slight tracking errors can rapidly change notes.
+
+Instead, large spatial regions are used for note selection, producing much more stable and deliberate chord transitions.
+
+---
+
+## Procedural Audio Synthesis
+
+The guitar and string instruments are generated procedurally inside:
+
+```text
+sound_synth.py
 ```
 
-Useful for confirming things still work after you tune any thresholds.
+No external audio assets are required for these instruments.
 
-## Why these specific design choices
+Only drum sounds rely on prerecorded `.wav` samples, as synthesizing realistic cymbals in real time is computationally expensive.
 
-**Why `mediapipe.tasks` instead of the older `mp.solutions.hands`?**
-Recent MediaPipe versions (0.10.x) removed the old `solutions` API entirely.
-The current `tasks` API is also what the JavaScript/web version uses
-(`@mediapipe/tasks-vision`), so the gesture-detection logic you build next
-(strum detection, chord shapes) will port to a browser version with minimal
-changes later, if you go that route.
+---
 
-**Why flip the frame horizontally?**
-MediaPipe's left/right hand labels assume a mirrored/selfie-style camera.
-Flipping the frame in `main.py` before detection makes the "Left"/"Right"
-label match the user's actual hand, and feels natural on screen (move your
-hand right, see it move right) — like looking in a mirror.
+## Persistent Audio Stream
 
-**Why `running_mode=VIDEO` instead of `IMAGE` or `LIVE_STREAM`?**
-`VIDEO` mode processes frames synchronously with a timestamp, which is
-simplest for a webcam loop. `LIVE_STREAM` mode is async/callback-based and
-adds complexity we don't need yet — worth revisiting only if Phase 2+
-performance needs it.
+Using `sounddevice.play()` repeatedly interrupts previous sounds.
 
-**Why a persistent `OutputStream` instead of just calling `sounddevice.play()`?**
-`sounddevice.play()` explicitly cannot handle multiple overlapping sounds —
-calling it again stops whatever was already playing. Since a chord strum and
-a drum hit need to sound at once (and Phase 4's looper will need several
-layers playing simultaneously), `audio_engine.py` opens one persistent
-stream with its own mixing callback that sums all currently-playing sounds
-each audio block. This is the standard pattern for any real-time multi-voice
-audio app in Python, and it's the same architecture the looper will extend.
+Instead, the application maintains a single persistent output stream with a custom mixing callback that:
 
-**Why synthesize sounds instead of using recorded samples?**
-Zero external assets needed — Phase 2 runs immediately after `pip install`.
-`sound_synth.py` has a `load_wav_sample()` function ready for when you want
-to swap in real recorded guitar/drum samples; it returns audio in the exact
-same format the synthesized sounds use, so it's a drop-in replacement.
+- mixes active sounds
+- supports overlapping playback
+- performs fade-outs
+- enables sustained instruments
+- reduces audio artifacts
 
-**Why finger-count for chord selection instead of finger shapes?**
-Counting extended fingers (0–4 → 5 chords) is the simplest gesture that's
-genuinely easy to perform reliably and gets a real two-handed instrument
-working today. `chord_selector.py` is intentionally isolated so Phase 3 can
-replace it with proper per-finger chord shapes (e.g. specific finger
-combinations, not just a count) without touching any other file.
+---
 
-## Troubleshooting
+# Troubleshooting
 
-**"Could not open webcam"**
-Another app may be using the camera, or your OS hasn't granted camera
-permission to your terminal/IDE. Check System Settings → Privacy → Camera
-(macOS) or just close other video apps (Zoom, Teams, browser tabs using the
-camera).
+## Webcam Cannot Be Opened
 
-**Low FPS (<15)**
-Try lowering resolution further in `main.py` (e.g. 480x360), or reduce
-`max_hands` to 1 while testing single-hand logic.
+Another application may already be using your camera.
 
-**Hands not detected reliably**
-Improve lighting — MediaPipe's palm detector is lighting-sensitive. Avoid
-strong backlight (window behind you). Keep hands fully in frame.
+Close applications such as:
 
-**Left/Right labels seem swapped**
-This would only happen with an unusual camera setup. See the note in
-`hand_tracker.py` above `_fix_label`-equivalent comments — the fix is a
-one-line swap if you ever need it.
+- Zoom
+- Microsoft Teams
+- Google Meet
+- Browser tabs using the webcam
 
-**No sound at all (Phase 2)**
-Run `python setup.py` again and check the `[2/2]` audio backend section —
-it will tell you directly if PortAudio is missing and how to install it.
-On Linux: `sudo apt-get install libportaudio2`. On macOS: `brew install
-portaudio`. If that section says OK but you still hear nothing, check your
-system's output device/volume — `setup.py` prints which device it found as
-default.
+---
 
-**Strums not triggering, or triggering too easily**
-Watch the "R-wrist vel" number on screen while you physically strum. If real
-strums show velocity well below the threshold, lower
-`StrumDetector(velocity_threshold=...)` in `main_phase2.py` (default 1.8).
-If small movements or jitter are falsely triggering strums, raise it.
+## Pinch Gesture Doesn't Trigger
 
-**Crackling / choppy audio**
-Raise `BLOCK_SIZE` in `audio_engine.py` (default 512) — this trades a little
-latency for stability. If your machine is also under load from the CV
-pipeline, lowering webcam resolution can help free up CPU for audio too.
+Ensure that your thumb tip fully touches your index fingertip.
 
-**Chord sounds feel delayed after strumming**
-This is more likely a strum-detection timing issue than audio latency —
-check the debounce/threshold tuning above first. If the audio itself feels
-laggy, lower `BLOCK_SIZE` in `audio_engine.py` (trades stability for speed).
+If detection is still difficult, increase:
 
-## What's next (Phase 3 preview)
+```python
+GUITAR_PICK_JOIN_RATIO
+```
 
-Phase 3 upgrades `chord_selector.py` from simple finger-counting to real
-finger-shape recognition (specific combinations, not just a count) for more
-expressive control, and likely splits the drum trigger so it doesn't share
-the strum hand. Phase 4 adds the looper: a fixed-tempo metronome and the
-ability to record a layer (chords or drums) that loops continuously while
-you record more layers on top — building directly on the mixing engine
-`audio_engine.py` already provides.
+A slightly higher value (for example **0.5**) makes pinch detection more forgiving.
+
+---
+
+## Strings Flicker Between Notes
+
+- Keep both hands visible.
+- Hold your fingers steady inside the selection boxes.
+- Avoid hovering near the borders of the regions.
+
+---
+
+## Crackling or Choppy Audio
+
+Increase the audio block size in:
+
+```text
+audio_engine.py
+```
+
+Example:
+
+```python
+BLOCK_SIZE = 512
+```
+
+A larger block size increases stability at the cost of slightly higher latency.
+
+Reducing webcam resolution can also improve performance on slower systems.
+
+---
+
+# Future Roadmap
+
+## 🎙️ Integrated Looper
+
+A multi-track looping system allowing users to:
+
+- Record drum patterns
+- Layer sustained strings
+- Solo using the guitar
+- Build complete performances in real time
+
+---
+
+## ⏱️ Metronome & Transport Controls
+
+Future versions will include:
+
+- Visual metronome
+- Audible click track
+- Tempo adjustment
+- Beat synchronization
+- Quantized loop recording
+
+---
+
+# Technologies Used
+
+- Python
+- OpenCV
+- MediaPipe Tasks API
+- NumPy
+- SciPy
+- sounddevice
+- PortAudio
+
+---
+
+# License
+
+This project is intended for educational and research purposes.
+
+---
+
+# Author
+
+Developed as a real-time gesture-controlled virtual musical instrument using computer vision and procedural audio synthesis.
